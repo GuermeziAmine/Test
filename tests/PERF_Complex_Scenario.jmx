@@ -101,7 +101,7 @@
   &quot;postId&quot;: ${extracted_id},&#xd;
   &quot;name&quot;: &quot;Test Octane&quot;,&#xd;
   &quot;email&quot;: &quot;test@pipeline.com&quot;,&#xd;
-  &quot;body&quot;: &quot;Ceci est un test complexe pour valider le pipeline.&quot;&#xd;
+   &quot;body&quot;: &quot;Ceci est un test complexe pour valider le pipeline.&quot;&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
