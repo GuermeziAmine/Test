@@ -1,0 +1,61 @@
+name: Run Full JMeter Suite
+
+on:
+  workflow_dispatch: # Bouton manuel pour lancer quand vous voulez
+
+permissions:
+  contents: write # Indispensable pour sauvegarder le CSV
+
+jobs:
+  performance-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Récupération du code
+        uses: actions/checkout@v4
+
+      - name: 2. Installation de JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jre-headless
+          wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
+          sudo ln -s $PWD/apache-jmeter-5.6.3/bin/jmeter /usr/bin/jmeter
+
+      - name: 3. Exécution des 4 Tests
+        run: |
+          # Création du dossier de résultats
+          mkdir -p results
+
+          echo "--- Lancement Test 1 : PERF_Test1 ---"
+          jmeter -n -t "tests/PERF_Test1.jmx" -l results/temp1.csv
+          
+          echo "--- Lancement Test 2 : Perf_Test2 (Attention casse) ---"
+          jmeter -n -t "tests/Perf_Test2.jmx" -l results/temp2.csv
+          
+          echo "--- Lancement Test 3 : PERF_Test3 ---"
+          jmeter -n -t "tests/PERF_Test3.jmx" -l results/temp3.csv
+          
+          echo "--- Lancement Test 4 : Scenario Complexe ---"
+          jmeter -n -t "tests/PERF_Complex_Scenario.jmx" -l results/temp4.csv
+
+      - name: 4. Fusion des résultats (Merge)
+        run: |
+          # On prend l'en-tête du premier fichier
+          head -n 1 results/temp1.csv > results/resultats_final.csv
+          
+          # On ajoute le contenu de tous les fichiers (sans les en-têtes répétés)
+          tail -n +2 -q results/temp*.csv >> results/resultats_final.csv
+          
+          # Vérification : Afficher les 5 premières lignes
+          echo "Aperçu du fichier final :"
+          head -n 5 results/resultats_final.csv
+
+      - name: 5. Sauvegarde dans GitHub
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # On ajoute uniquement le fichier final fusionné
+          git add results/resultats_final.csv
+          
+          git diff --quiet && git diff --staged --quiet || (git commit -m "New Performance Results [skip ci]" && git push)
